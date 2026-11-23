@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Match Challenge - Bimbingan & Konseling Fase E</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Plus Jakarta Sans & Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tone.js untuk efek suara lembut tanpa file eksternal -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['"Nunito"', 'sans-serif'],
+                    },
+                    colors: {
+                        cream: '#FDFBF7',
+                        lavender: {
+                            50: '#F6F4FF',
+                            100: '#EDE9FE',
+                            200: '#DDD6FE',
+                            300: '#C4B5FD',
+                            500: '#8B5CF6',
+                            600: '#7C3AED',
+                        },
+                        sage: {
+                            50: '#F2F8F5',
+                            100: '#E0EFE8',
+                            200: '#C2DFD1',
+                            500: '#4D8B70',
+                            600: '#3B7059',
+                        },
+                        peach: {
+                            100: '#FFE8D6',
+                            500: '#F59E0B',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #FDFBF7;
+            background-image: radial-gradient(#DDD6FE 1px, transparent 1px), radial-gradient(#C2DFD1 1px, #FDFBF7 1px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            color: #2D2A3E;
+            overflow-x: hidden;
+        }
+
+        /* Animasi Kartu & Efek Interaktif */
+        @keyframes popIn {
+            0% { transform: scale(0.92); opacity: 0; }
+            70% { transform: scale(1.03); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes pulseMatch {
+            0% { box-shadow: 0 0 0 0 rgba(77, 139, 112, 0.5); }
+            70% { box-shadow: 0 0 0 14px rgba(77, 139, 112, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(77, 139, 112, 0); }
+        }
+
+        @keyframes shakeSoft {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            50% { transform: translateX(6px); }
+            75% { transform: translateX(-4px); }
+        }
+
+        .animate-pop {
+            animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .animate-float {
+            animation: floatSlow 4s ease-in-out infinite;
+        }
+
+        .match-success-anim {
+            animation: pulseMatch 0.8s ease-out;
+        }
+
+        .shake-anim {
+            animation: shakeSoft 0.4s ease-in-out;
+        }
+
+        /* Gaya Kartu Drag & Click */
+        .game-card {
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .game-card:hover:not(.matched-card) {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px -8px rgba(124, 58, 237, 0.18);
+        }
+
+        .game-card.selected-card {
+            border-color: #7C3AED;
+            background-color: #F6F4FF;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.25);
+            transform: translateY(-3px);
+        }
+
+        .game-card.drag-over {
+            border-color: #4D8B70;
+            background-color: #F2F8F5;
+            transform: scale(1.02);
+            border-style: dashed;
+        }
+
+        .matched-card {
+            background-color: #F2F8F5 !important;
+            border-color: #4D8B70 !important;
+            opacity: 0.92;
+        }
+
+        /* Custom Scrollbar lembut */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FDFBF7;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #C4B5FD;
+            border-radius: 999px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased selection:bg-lavender-200 selection:text-lavender-900">
+
+    <!-- HEADER / NAVBAR (Selalu tampil rapi, skor muncul saat bermain) -->
+    <header class="w-full sticky top-0 z-30 bg-cream/90 backdrop-blur-md border-b border-lavender-200/70 px-4 py-3">
+        <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 cursor-pointer" onclick="goHomeConfirm()">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-lavender-500 to-lavender-600 flex items-center justify-center text-white shadow-md">
+                    <!-- Ikon Kompas Karier SVG -->
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 2a10 10 0 100 20 10 10 0 000-20zm3.5 6.5l-2.2 5.3-5.3 2.2 2.2-5.3 5.3-2.2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <span class="font-display font-extrabold text-base sm:text-lg text-slate-800 block leading-tight">Career Match</span>
+                    <span class="text-xs font-medium text-lavender-600">Layanan BK • SMA Fase E</span>
+                </div>
+            </div>
+
+            <!-- Panel Status Permainan (Tersembunyi di halaman pembuka) -->
+            <div id="hud-bar" class="hidden flex items-center gap-2 sm:gap-4">
+                <div class="bg-lavender-100/80 border border-lavender-200 px-3 py-1.5 rounded-2xl flex items-center gap-1.5">
+                    <span class="text-xs font-semibold text-lavender-600 uppercase tracking-wider">Level</span>
+                    <span id="hud-level" class="font-display font-extrabold text-sm sm:text-base text-slate-800">1/3</span>
+                </div>
+                <div class="bg-sage-100 border border-sage-200 px-3.5 py-1.5 rounded-2xl flex items-center gap-1.5 shadow-sm">
+                    <span class="text-base">⭐</span>
+                    <span class="text-xs font-semibold text-sage-600 hidden sm:inline">Skor:</span>
+                    <span id="hud-score" class="font-display font-extrabold text-sm sm:text-base text-sage-600">0</span>
+                </div>
+                <button id="btn-sound" onclick="toggleSound()" title="Suara Efek" class="p-2 rounded-xl bg-white border border-lavender-200 text-slate-600 hover:bg-lavender-50 transition">
+                    <span id="sound-icon">🔊</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- KONTEN UTAMA -->
+    <main class="flex-grow w-full max-w-5xl mx-auto px-4 py-6 sm:py-10 flex flex-col justify-center">
+
+        <!-- =========================================================
+             HALAMAN 1: PEMBUKA (LANDING PAGE)
+             ========================================================= -->
+        <section id="page-intro" class="animate-pop">
+            <div class="bg-white/95 rounded-3xl shadow-xl shadow-lavender-200/40 border border-lavender-200 p-6 sm:p-10 md:p-12 overflow-hidden relative">
+                <!-- Dekorasi Latar -->
+                <div class="absolute -top-16 -right-16 w-48 h-48 bg-lavender-100 rounded-full blur-2xl opacity-70 pointer-events-none"></div>
+                <div class="absolute -bottom-16 -left-16 w-48 h-48 bg-sage-100 rounded-full blur-2xl opacity-70 pointer-events-none"></div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+                    <div class="lg:col-span-7 space-y-5 text-center lg:text-left">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-lavender-100 text-lavender-600 font-semibold text-xs sm:text-sm">
+                            <span>✨ Eksplorasi Karier & Potensi Diri</span>
+                        </div>
+                        <h1 class="font-display font-black text-3xl sm:text-4xl md:text-5xl text-slate-800 leading-tight">
+                            Career Match <span class="text-lavender-600">Challenge</span>
+                        </h1>
+                        <p class="font-display font-bold text-lg sm:text-xl text-sage-600">
+                            Temukan Kecocokan Potensi Dirimu dengan Pilihan Karier!
+                        </p>
+                        <p class="text-slate-600 text-sm sm:text-base leading-relaxed">
+                            Pernah bingung memikirkan masa depan setelah lulus SMA? Melalui permainan interaktif ini, kamu akan diajak mengenali bagaimana <strong>minat, bakat, dan kemampuan</strong> saling terhubung dengan berbagai pilihan profesi—tanpa batasan kaku!
+                        </p>
+
+                        <div class="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
+                            <button onclick="showPage('page-guide')" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-lavender-500 to-lavender-600 hover:from-lavender-600 hover:to-lavender-700 text-white font-display font-extrabold text-base sm:text-lg shadow-lg shadow-lavender-500/30 transform hover:-translate-y-0.5 transition flex items-center justify-center gap-2">
+                                <span>Mulai Bermain</span>
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                            </button>
+                            <button onclick="startGameDirectly()" class="w-full sm:w-auto px-6 py-4 rounded-2xl bg-sage-50 hover:bg-sage-100 text-sage-600 border border-sage-200 font-display font-bold text-sm sm:text-base transition">
+                                Langsung ke Level 1
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Ilustrasi SVG Profesi & Potensi -->
+                    <div class="lg:col-span-5 flex justify-center">
+                        <div class="w-full max-w-sm bg-gradient-to-br from-lavender-50 via-cream to-sage-50 rounded-3xl p-6 border border-lavender-200/80 shadow-inner animate-float">
+                            <svg viewBox="0 0 320 260" class="w-full h-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <!-- Lingkaran Utama -->
+                                <circle cx="160" cy="130" r="95" fill="#EDE9FE"/>
+                                <circle cx="160" cy="130" r="70" fill="#FDFBF7" stroke="#C4B5FD" stroke-width="2" stroke-dasharray="6 6"/>
+                                
+                                <!-- Ikon Tengah: Siswa & Bintang Potensi -->
+                                <circle cx="160" cy="112" r="24" fill="#8B5CF6"/>
+                                <path d="M124 174C124 154.118 140.118 138 160 138C179.882 138 196 154.118 196 174" fill="#7C3AED"/>
+                                
+                                <!-- Kartu Melayang 1: Seni / Kreatif -->
+                                <rect x="24" y="34" width="76" height="54" rx="14" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="2"/>
+                                <text x="62" y="63" text-anchor="middle" font-size="22">🎨</text>
+                                <text x="62" y="79" text-anchor="middle" font-size="9" font-weight="bold" fill="#6D28D9">Kreativitas</text>
+
+                                <!-- Kartu Melayang 2: Sains / Alam -->
+                                <rect x="220" y="34" width="76" height="54" rx="14" fill="#FFFFFF" stroke="#C2DFD1" stroke-width="2"/>
+                                <text x="258" y="63" text-anchor="middle" font-size="22">🔬</text>
+                                <text x="258" y="79" text-anchor="middle" font-size="9" font-weight="bold" fill="#3B7059">Observasi</text>
+
+                                <!-- Kartu Melayang 3: Empati / Sosial -->
+                                <rect x="24" y="172" width="76" height="54" rx="14" fill="#FFFFFF" stroke="#C2DFD1" stroke-width="2"/>
+                                <text x="62" y="201" text-anchor="middle" font-size="22">🤝</text>
+                                <text x="62" y="217" text-anchor="middle" font-size="9" font-weight="bold" fill="#3B7059">Empati</text>
+
+                                <!-- Kartu Melayang 4: Logika / Analisis -->
+                                <rect x="220" y="172" width="76" height="54" rx="14" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="2"/>
+                                <text x="258" y="201" text-anchor="middle" font-size="22">📊</text>
+                                <text x="258" y="217" text-anchor="middle" font-size="9" font-weight="bold" fill="#6D28D9">Analisis</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =========================================================
+             HALAMAN 2: PETUNJUK BERMAIN
+             ========================================================= -->
+        <section id="page-guide" class="hidden animate-pop">
+            <div class="bg-white/95 rounded-3xl shadow-xl shadow-lavender-200/40 border border-lavender-200 p-6 sm:p-10">
+                <div class="text-center max-w-2xl mx-auto mb-8">
+                    <span class="px-3.5 py-1 rounded-full bg-sage-100 text-sage-600 font-bold text-xs uppercase tracking-wider">Panduan Bermain</span>
+                    <h2 class="font-display font-black text-2xl sm:text-3xl text-slate-800 mt-2">Bagaimana Cara Bermainnya?</h2>
+                    <p class="text-slate-600 text-sm sm:text-base mt-2">
+                        Ikuti 3 tahapan seru berikut untuk melatih pemahamanmu tentang hubungan potensi diri dan dunia kerja.
+                    </p>
+                </div>
+
+                <!-- 3 Tahapan Level -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+                    <div class="bg-lavender-50/80 border border-lavender-200 rounded-2xl p-5 flex flex-col justify-between">
+                        <div>
+                            <div class="w-11 h-11 rounded-2xl bg-lavender-500 text-white font-display font-black text-lg flex items-center justify-center mb-4 shadow-sm">1</div>
+                            <h3 class="font-display font-extrabold text-lg text-slate-800 mb-2">Level 1: Kenali Potensimu</h3>
+                            <p class="text-sm text-slate-600 leading-relaxed">
+                                Baca 5 kartu profil teman sebaya dengan teliti. Pahami kombinasi <strong>minat</strong> (hal yang disukai), <strong>bakat</strong> (potensi alami), dan <strong>kemampuan</strong> mereka.
+                            </p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-lavender-200/60 text-xs font-semibold text-lavender-600">
+                            🔍 Tandai kartu yang sudah dipahami
+                        </div>
+                    </div>
+
+                    <div class="bg-sage-50/80 border border-sage-200 rounded-2xl p-5 flex flex-col justify-between">
+                        <div>
+                            <div class="w-11 h-11 rounded-2xl bg-sage-500 text-white font-display font-black text-lg flex items-center justify-center mb-4 shadow-sm">2</div>
+                            <h3 class="font-display font-extrabold text-lg text-slate-800 mb-2">Level 2: Career Matching</h3>
+                            <p class="text-sm text-slate-600 leading-relaxed">
+                                Pasangkan kartu profil dengan pilihan profesi yang relevan! Kamu bisa <strong>klik kartu profil lalu klik profesinya</strong>, atau <strong>tarik & lepas (drag-and-drop)</strong>.
+                            </p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-sage-200/60 text-xs font-semibold text-sage-600">
+                            💡 Ingat: 1 profil bisa cocok dengan beberapa profesi!
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-50/70 border border-amber-200 rounded-2xl p-5 flex flex-col justify-between">
+                        <div>
+                            <div class="w-11 h-11 rounded-2xl bg-amber-500 text-white font-display font-black text-lg flex items-center justify-center mb-4 shadow-sm">3</div>
+                            <h3 class="font-display font-extrabold text-lg text-slate-800 mb-2">Level 3: Career Challenge</h3>
+                            <p class="text-sm text-slate-600 leading-relaxed">
+                                Hadapi studi kasus nyata siswa SMA! Pilih karier yang paling relevan beserta <strong>alasan logis</strong> yang menghubungkan potensi dengan tugas profesi tersebut.
+                            </p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-amber-200/60 text-xs font-semibold text-amber-700">
+                            🏆 Dapatkan poin bonus di setiap kasus!
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Catatan Penting BK -->
+                <div class="bg-lavender-100/60 border border-lavender-200 rounded-2xl p-4 sm:p-5 mb-8 flex items-start gap-3.5">
+                    <span class="text-2xl">🌱</span>
+                    <div class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                        <strong class="text-lavender-700 block mb-0.5">Catatan Bimbingan & Konseling:</strong>
+                        Tidak ada satu profesi tunggal yang mutlak untuk satu tipe orang. Seseorang yang empatik bisa menjadi Konselor, Dokter, Guru, maupun Perawat. Game ini melatih cara berpikir terbuka dalam mengeksplorasi karier!
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <button onclick="showPage('page-intro')" class="w-full sm:w-auto px-6 py-3 rounded-2xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-sm transition">
+                        ← Kembali
+                    </button>
+                    <button onclick="startGameDirectly()" class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-lavender-500 to-lavender-600 hover:from-lavender-600 hover:to-lavender-700 text-white font-display font-extrabold text-base shadow-lg shadow-lavender-500/25 transition">
+                        Mulai Level 1 Sekarang 🚀
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- =========================================================
+             HALAMAN 3: PERMAINAN (LEVEL 1, LEVEL 2, LEVEL 3)
+             ========================================================= -->
+        <section id="page-game" class="hidden space-y-6">
+            
+            <!-- Stepper Progress Level -->
+            <div class="bg-white/90 rounded-2xl border border-lavender-200 p-4 shadow-sm">
+                <div class="flex items-center justify-between text-xs sm:text-sm font-bold mb-2">
+                    <span id="step-label-1" class="text-lavender-600">1. Kenali Potensi</span>
+                    <span id="step-label-2" class="text-slate-400">2. Career Matching</span>
+                    <span id="step-label-3" class="text-slate-400">3. Career Challenge</span>
+                </div>
+                <div class="w-full h-2.5 bg-lavender-100 rounded-full overflow-hidden">
+                    <div id="progress-bar-fill" class="h-full bg-gradient-to-r from-lavender-500 to-sage-500 rounded-full transition-all duration-500" style="width: 33%"></div>
+                </div>
+            </div>
+
+            <!-- KONTEN LEVEL 1: KENALI POTENSIMU -->
+            <div id="level-1-view" class="hidden animate-pop space-y-6">
+                <div class="bg-white/95 rounded-3xl border border-lavender-200 p-6 sm:p-8 shadow-md">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-lavender-100 pb-5 mb-6">
+                        <div>
+                            <span class="px-3 py-1 rounded-full bg-lavender-100 text-lavender-600 font-bold text-xs">LEVEL 1 • EKSPLORASI PROFIL</span>
+                            <h2 class="font-display font-black text-xl sm:text-2xl text-slate-800 mt-1.5">Kenali Potensi 5 Karakter Berikut</h2>
+                            <p class="text-slate-600 text-xs sm:text-sm mt-1">
+                                Klik setiap kartu profil untuk membaca detail <strong>Minat, Bakat, dan Kemampuan</strong> mereka sebelum mencocokkan kariernya di Level 2!
+                            </p>
+                        </div>
+                        <div class="bg-sage-50 border border-sage-200 px-4 py-2.5 rounded-2xl text-center shrink-0">
+                            <span class="text-xs text-sage-600 font-semibold block">Profil Dipelajari</span>
+                            <span id="l1-counter" class="font-display font-black text-lg text-sage-600">0 / 5</span>
+                        </div>
+                    </div>
+
+                    <!-- Grid Kartu Profil Level 1 -->
+                    <div id="l1-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Diisi secara dinamis oleh JS -->
+                    </div>
+
+                    <div class="mt-8 pt-5 border-t border-lavender-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <p id="l1-hint" class="text-xs sm:text-sm text-slate-500 italic">
+                            💡 Klik semua kartu di atas untuk membuka tombol lanjut ke Level 2 (+50 Poin).
+                        </p>
+                        <button id="btn-to-level-2" disabled onclick="initLevel2()" class="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-slate-200 text-slate-400 font-display font-extrabold text-sm sm:text-base transition cursor-not-allowed">
+                            Lanjut ke Level 2: Career Matching →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KONTEN LEVEL 2: CAREER MATCHING -->
+            <div id="level-2-view" class="hidden animate-pop space-y-6">
+                <div class="bg-white/95 rounded-3xl border border-lavender-200 p-5 sm:p-8 shadow-md">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-lavender-100 pb-5 mb-6">
+                        <div>
+                            <span class="px-3 py-1 rounded-full bg-sage-100 text-sage-600 font-bold text-xs">LEVEL 2 • MATCHING GAME</span>
+                            <h2 class="font-display font-black text-xl sm:text-2xl text-slate-800 mt-1.5">Pasangkan Potensi dengan Profesi Relevan</h2>
+                            <p class="text-slate-600 text-xs sm:text-sm mt-1">
+                                <strong>Cara bermain:</strong> Klik satu <em>Kartu Profil</em> di kolom kiri, lalu klik <em>Kartu Profesi</em> yang cocok di kolom kanan (atau geser/drag kartu profil ke kartu profesi).
+                            </p>
+                        </div>
+                        <div class="bg-lavender-50 border border-lavender-200 px-4 py-2.5 rounded-2xl text-center shrink-0">
+                            <span class="text-xs text-lavender-600 font-semibold block">Pasangan Selesai</span>
+                            <span id="l2-counter" class="font-display font-black text-lg text-lavender-600">0 / 5</span>
+                        </div>
+                    </div>
+
+                    <!-- Area Matching 2 Kolom -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        <!-- Kolom Kiri: Kartu Profil (5 Profil) -->
+                        <div class="lg:col-span-5 space-y-3">
+                            <h3 class="font-display font-extrabold text-sm uppercase tracking-wider text-lavender-600 flex items-center gap-2">
+                                <span>👤 Kartu Profil Individu</span>
+                            </h3>
+                            <div id="l2-profiles-list" class="space-y-3">
+                                <!-- Kartu Profil Level 2 -->
+                            </div>
+                        </div>
+
+                        <!-- Kolom Kanan: Kartu Pilihan Pekerjaan (8 Pilihan Beragam) -->
+                        <div class="lg:col-span-7 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-display font-extrabold text-sm uppercase tracking-wider text-sage-600 flex items-center gap-2">
+                                    <span>💼 Pilihan Profesi (Tersedia 8 Profesi)</span>
+                                </h3>
+                                <span class="text-xs text-slate-500 hidden sm:inline">Beberapa profesi bisa cocok untuk 1 profil!</span>
+                            </div>
+                            <div id="l2-careers-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <!-- Kartu Profesi Level 2 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="l2-complete-bar" class="hidden mt-8 pt-5 border-t border-sage-200 flex flex-col sm:flex-row items-center justify-between gap-4 bg-sage-50/80 p-4 rounded-2xl">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🎉</span>
+                            <div>
+                                <p class="font-display font-extrabold text-slate-800 text-sm sm:text-base">Hebat! Semua profil berhasil kamu pasangkan!</p>
+                                <p class="text-xs text-slate-600">Siap menguji analisismu pada studi kasus nyata di Level 3?</p>
+                            </div>
+                        </div>
+                        <button onclick="initLevel3()" class="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white font-display font-extrabold text-sm sm:text-base shadow-md transition shrink-0">
+                            Lanjut ke Level 3 →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KONTEN LEVEL 3: CAREER CHALLENGE (STUDI KASUS + ALASAN) -->
+            <div id="level-3-view" class="hidden animate-pop space-y-6">
+                <div class="bg-white/95 rounded-3xl border border-lavender-200 p-6 sm:p-8 shadow-md">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-lavender-100 pb-5 mb-6">
+                        <div>
+                            <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-700 font-bold text-xs">LEVEL 3 • CAREER CHALLENGE</span>
+                            <h2 class="font-display font-black text-xl sm:text-2xl text-slate-800 mt-1.5">Analisis Studi Kasus Karier</h2>
+                            <p class="text-slate-600 text-xs sm:text-sm mt-1">
+                                Baca studi kasus berikut, lalu pilih <strong>kombinasi karier dan alasan</strong> yang paling relevan dengan potensi tokohnya!
+                            </p>
+                        </div>
+                        <div class="bg-amber-50 border border-amber-200 px-4 py-2.5 rounded-2xl text-center shrink-0">
+                            <span class="text-xs text-amber-700 font-semibold block">Tantangan</span>
+                            <span id="l3-counter" class="font-display font-black text-lg text-amber-700">1 / 3</span>
+                        </div>
+                    </div>
+
+                    <!-- Kotak Studi Kasus -->
+                    <div id="l3-case-box" class="space-y-6">
+                        <!-- Diisi dinamis oleh JS -->
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- =========================================================
+             HALAMAN 4: HASIL & PENCAPAIAN
+             ========================================================= -->
+        <section id="page-result" class="hidden animate-pop">
+            <div class="bg-white/95 rounded-3xl shadow-xl shadow-lavender-200/40 border border-lavender-200 p-6 sm:p-10 text-center max-w-3xl mx-auto">
+                <div class="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-lavender-500 to-sage-500 flex items-center justify-center text-4xl text-white shadow-lg mb-4 animate-float">
+                    🏅
+                </div>
+                <span class="px-3.5 py-1 rounded-full bg-lavender-100 text-lavender-600 font-bold text-xs uppercase tracking-wider">Tantangan Selesai!</span>
+                <h2 id="result-badge-title" class="font-display font-black text-2xl sm:text-4xl text-slate-800 mt-2">
+                    Career Explorer Cerdas!
+                </h2>
+
+                <!-- Kotak Skor Akhir -->
+                <div class="my-6 inline-flex flex-col items-center bg-gradient-to-b from-lavender-50 to-sage-50 border border-lavender-200 px-8 py-5 rounded-3xl">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Skor Kamu</span>
+                    <span id="final-score-display" class="font-display font-black text-4xl sm:text-5xl text-lavender-600 my-1">0</span>
+                    <span id="final-accuracy-text" class="text-xs font-semibold text-sage-600">Semua level berhasil diselesaikan!</span>
+                </div>
+
+                <!-- Ringkasan Pembelajaran & Pesan Non-Deterministik -->
+                <div class="bg-cream border border-lavender-200/80 rounded-2xl p-5 sm:p-6 text-left space-y-3 mb-8">
+                    <h3 class="font-display font-extrabold text-base sm:text-lg text-slate-800 flex items-center gap-2">
+                        <span>💡 Pesan Penting untuk Perjalanan Kariermu</span>
+                    </h3>
+                    <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                        Selamat! Kamu telah berlatih menghubungkan <strong>minat, bakat, dan kemampuan</strong> dengan berbagai profesi. Ingatlah bahwa <strong>skor dalam permainan ini bukanlah penentu mutlak masa depan atau tes kepribadian</strong>.
+                    </p>
+                    <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                        Potensi dirimu terus berkembang seiring pengalaman belajar di SMA. Satu minat yang kamu miliki hari ini dapat membuka pintu ke puluhan profesi yang beragam di masa depan!
+                    </p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <button onclick="showPage('page-reflection')" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-lavender-500 to-lavender-600 hover:from-lavender-600 hover:to-lavender-700 text-white font-display font-extrabold text-base shadow-lg shadow-lavender-500/25 transition">
+                        Lanjut ke Refleksi Diri ✍️
+                    </button>
+                    <button onclick="resetAndPlayAgain()" class="w-full sm:w-auto px-6 py-4 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-display font-bold text-sm transition">
+                        🔄 Main Lagi
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- =========================================================
+             HALAMAN 5: REFLEKSI DIRI SISWA
+             ========================================================= -->
+        <section id="page-reflection" class="hidden animate-pop">
+            <div class="bg-white/95 rounded-3xl shadow-xl shadow-lavender-200/40 border border-lavender-200 p-6 sm:p-10 max-w-3xl mx-auto">
+                <div class="border-b border-lavender-100 pb-5 mb-6">
+                    <span class="px-3 py-1 rounded-full bg-sage-100 text-sage-600 font-bold text-xs">LEMBAR REFLEKSI BK</span>
+                    <h2 class="font-display font-black text-2xl sm:text-3xl text-slate-800 mt-2">Refleksi Potensi & Karierku</h2>
+                    <p class="text-slate-600 text-xs sm:text-sm mt-1">
+                        Tidak perlu memasukkan nama atau data pribadi. Tuliskan pikiranmu secara jujur sebagai bahan renungan atau diskusi bersama Guru BK di kelas!
+                    </p>
+                </div>
+
+                <div class="space-y-5">
+                    <!-- Pertanyaan 1 -->
+                    <div>
+                        <label for="ref-q1" class="block font-display font-extrabold text-sm sm:text-base text-slate-800 mb-2">
+                            1. Potensi apa yang paling kamu kenali dari dirimu saat ini? <span class="font-normal text-slate-500 text-xs">(Contoh: suka mendengarkan teman, teliti menghitung, senang menggambar, atau suka observasi alam)</span>
+                        </label>
+                        <textarea id="ref-q1" rows="3" placeholder="Tuliskan potensi, minat, atau kebiasaan positif yang kamu rasakan..." class="w-full rounded-2xl border border-lavender-200 bg-cream/60 p-4 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-lavender-500 focus:bg-white transition"></textarea>
+                    </div>
+
+                    <!-- Pertanyaan 2 -->
+                    <div>
+                        <label for="ref-q2" class="block font-display font-extrabold text-sm sm:text-base text-slate-800 mb-2">
+                            2. Karier atau bidang pekerjaan apa yang ingin kamu eksplorasi lebih lanjut setelah bermain?
+                        </label>
+                        <textarea id="ref-q2" rows="3" placeholder="Tuliskan 1-3 bidang karier yang membuatmu penasaran dan alasannya..." class="w-full rounded-2xl border border-lavender-200 bg-cream/60 p-4 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-lavender-500 focus:bg-white transition"></textarea>
+                    </div>
+
+                    <!-- Pertanyaan 3 -->
+                    <div>
+                        <label for="ref-q3" class="block font-display font-extrabold text-sm sm:text-base text-slate-800 mb-2">
+                            3. Langkah kecil apa yang bisa kamu lakukan di kelas X ini untuk mengembangkan potensi tersebut?
+                        </label>
+                        <input id="ref-q3" type="text" placeholder="Contoh: ikut ekstrakurikuler KIR, aktif berorganisasi, atau berdiskusi dengan Guru BK..." class="w-full rounded-2xl border border-lavender-200 bg-cream/60 p-4 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-lavender-500 focus:bg-white transition">
+                    </div>
+
+                    <!-- Kartu Ringkasan Refleksi (Muncul setelah disimpan) -->
+                    <div id="reflection-saved-card" class="hidden bg-sage-50 border border-sage-200 rounded-2xl p-5 space-y-3 animate-pop">
+                        <div class="flex items-center justify-between">
+                            <span class="font-display font-extrabold text-sage-600 text-sm flex items-center gap-1.5">
+                                ✅ Catatan Refleksimu Siap!
+                            </span>
+                            <button onclick="copyReflection()" class="px-3.5 py-1.5 rounded-xl bg-white border border-sage-200 text-sage-600 hover:bg-sage-100 font-bold text-xs transition">
+                                📋 Salin Teks Refleksi
+                            </button>
+                        </div>
+                        <p id="reflection-preview-text" class="text-xs sm:text-sm text-slate-700 whitespace-pre-line bg-white/80 p-3.5 rounded-xl border border-sage-100"></p>
+                    </div>
+
+                    <div class="pt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <button onclick="saveReflection()" class="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-sage-500 hover:bg-sage-600 text-white font-display font-extrabold text-sm sm:text-base shadow-md transition">
+                            Simpan & Lihat Ringkasan Refleksi ✨
+                        </button>
+                        <button onclick="resetAndPlayAgain()" class="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-lavender-100 hover:bg-lavender-200 text-lavender-700 font-display font-extrabold text-sm sm:text-base transition">
+                            🔄 Main Lagi dari Awal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- =========================================================
+         MODAL UMPAN BALIK INTERAKTIF (PENJELASAN EDUKATIF)
+         ========================================================= -->
+    <div id="feedback-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-lavender-200 animate-pop">
+            <div class="flex items-start gap-3.5 mb-4">
+                <div id="modal-icon-box" class="w-12 h-12 rounded-2xl bg-sage-100 text-2xl flex items-center justify-center shrink-0">
+                    🌟
+                </div>
+                <div>
+                    <span id="modal-tag" class="text-xs font-extrabold uppercase tracking-wider text-sage-600">Kecocokan Relevan!</span>
+                    <h3 id="modal-title" class="font-display font-black text-xl text-slate-800 mt-0.5">Judul Umpan Balik</h3>
+                </div>
+            </div>
+
+            <div id="modal-body" class="text-sm text-slate-600 leading-relaxed space-y-3 bg-cream p-4 rounded-2xl border border-lavender-100 mb-5">
+                <!-- Penjelasan hubungan minat, bakat, kemampuan & profesi -->
+            </div>
+
+            <!-- Kotak Alternatif Karier Lainnya (Anti-Stereotip) -->
+            <div id="modal-alternatives" class="hidden mb-5 bg-lavender-50/80 border border-lavender-200 p-3.5 rounded-2xl">
+                <span class="text-xs font-bold text-lavender-700 block mb-1">🌈 Tahukah kamu? Potensi ini juga cocok untuk:</span>
+                <p id="modal-alt-text" class="text-xs text-slate-700 font-medium"></p>
+            </div>
+
+            <div class="flex justify-end">
+                <button id="modal-close-btn" onclick="closeFeedbackModal()" class="w-full sm:w-auto px-7 py-3 rounded-2xl bg-lavender-600 hover:bg-lavender-700 text-white font-display font-extrabold text-sm transition">
+                    Mengerti & Lanjutkan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFIKASI RINGAN (Pengganti alert) -->
+    <div id="toast-box" class="hidden fixed bottom-5 right-5 z-50 bg-slate-800 text-white px-4 py-3 rounded-2xl shadow-lg text-xs sm:text-sm font-medium flex items-center gap-2 animate-pop">
+        <span id="toast-msg">Pesan</span>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="w-full text-center py-4 px-4 text-xs text-slate-500 border-t border-lavender-200/50 bg-cream/80">
+        Media Layanan Bimbingan & Konseling (BK) SMA Fase E • Eksplorasi Potensi & Karier Tanpa Batas
+    </footer>
+
+    <!-- =========================================================
+         JAVASCRIPT LOGIKA GAME EDUKASI
+         ========================================================= -->
+    <script>
+        // --- 1. DATA PROFIL & KARIER (5 PROFIL FIKTIF BERAGAM + MULTI-MATCHING) ---
+        const PROFILES_DATA = [
+            {
+                id: 'p1',
+                name: 'Nadia (Siswa Fase E)',
+                avatar: '🎧',
+                color: 'lavender',
+                shortTag: 'Empati & Pendengar Baik',
+                minat: 'Membantu teman menyelesaikan masalah, psikologi, dan kegiatan sosial.',
+                bakat: 'Kepekaan emosional tinggi (empati) dan ketenangan saat menghadapi orang lain.',
+                kemampuan: 'Mendengarkan secara aktif tanpa menghakimi serta merespons dengan hangat.',
+                validCareers: ['konselor', 'dokter', 'guru'],
+                alternativeNote: 'Konselor Sekolah/Psikolog, Dokter, Perawat, Pekerja Sosial, maupun Guru yang membimbing siswa.',
+                matchExplanations: {
+                    konselor: 'Sangat relevan! Minat membantu sesama berpadu dengan kemampuan mendengarkan aktif dan empati merupakan inti dari profesi Konselor dalam mendampingi klien menemukan solusi.',
+                    dokter: 'Cocok! Selain ilmu medis, seorang Dokter sangat membutuhkan empati dan kemampuan mendengarkan keluhan pasien secara menyeluruh agar diagnosis dan perawatan berjalan optimal.',
+                    guru: 'Relevan! Guru tidak hanya mengajar materi, tetapi juga mendampingi perkembangan emosional siswa dengan penuh empati dan kesabaran.'
+                }
+            },
+            {
+                id: 'p2',
+                name: 'Raka (Siswa Fase E)',
+                avatar: '🧮',
+                color: 'sage',
+                shortTag: 'Logika, Angka & Analisis',
+                minat: 'Permainan strategi, data statistik, ekonomi, dan memecahkan teka-teki logika.',
+                bakat: 'Berpikir sistematis, ketelitian tinggi, dan cepat mengenali pola angka.',
+                kemampuan: 'Menganalisis data keuangan, menyusun anggaran, dan memecahkan masalah secara terstruktur.',
+                validCareers: ['akuntan', 'peneliti', 'analis_data'],
+                alternativeNote: 'Akuntan, Analis Data, Aktuaris, Peneliti Sains/Ekonomi, hingga Software Engineer.',
+                matchExplanations: {
+                    akuntan: 'Tepat sekali! Ketelitian tinggi, minat pada angka, dan kemampuan analisis sistematis membantu Akuntan menyusun serta memeriksa laporan keuangan secara akurat.',
+                    peneliti: 'Sangat relevan! Peneliti membutuhkan kemampuan analisis data yang tajam dan ketekunan dalam memecahkan masalah berdasarkan bukti empiris.',
+                    analis_data: 'Cocok! Kemampuan mengenali pola angka dan berpikir terstruktur membuat Raka potensial mengolah data menjadi informasi penting bagi pengambilan keputusan.'
+                }
+            },
+            {
+                id: 'p3',
+                name: 'Tara (Siswa Fase E)',
+                avatar: '🎨',
+                color: 'peach',
+                shortTag: 'Kreatif & Visual Desain',
+                minat: 'Seni rupa, ilustrasi digital, tata letak poster, dan estetika visual.',
+                bakat: 'Imajinasi visual yang kuat dan kepekaan terhadap komposisi warna.',
+                kemampuan: 'Menggambar sketsa, mengoperasikan aplikasi desain, dan menyampaikan pesan lewat visual.',
+                validCareers: ['desainer', 'arsitek'],
+                alternativeNote: 'Desainer Grafis, Ilustrator, Desainer UI/UX, Arsitek, hingga Kreator Konten Visual.',
+                matchExplanations: {
+                    desainer: 'Sangat pas! Minat pada estetika serta kemampuan menggambar dan mengolah warna adalah fondasi utama Desainer Grafis dalam menciptakan karya komunikasi visual.',
+                    arsitek: 'Relevan! Perpaduan antara imajinasi visual, kemampuan menggambar sketsa, dan pemecahan masalah ruang sangat dibutuhkan dalam profesi Arsitek.'
+                }
+            },
+            {
+                id: 'p4',
+                name: 'Bagas (Siswa Fase E)',
+                avatar: '🎙️',
+                color: 'lavender',
+                shortTag: 'Komunikatif & Kolaboratif',
+                minat: 'Berdiskusi, tampil di depan umum, menulis berita, dan kegiatan organisasi.',
+                bakat: 'Kefasihan verbal, percaya diri saat berbicara, dan mudah membangun relasi.',
+                kemampuan: 'Menyampaikan gagasan dengan jelas, mewawancarai narasumber, dan bekerja dalam tim.',
+                validCareers: ['jurnalis', 'guru', 'konselor'],
+                alternativeNote: 'Jurnalis, Presenter, Guru, Hubungan Masyarakat (Public Relations), maupun Konselor.',
+                matchExplanations: {
+                    jurnalis: 'Sangat sesuai! Rasa ingin tahu, kemampuan mewawancarai orang, serta kecakapan menyampaikan informasi secara jelas adalah kekuatan utama seorang Jurnalis.',
+                    guru: 'Cocok! Kemampuan berbicara di depan umum dan membangun interaksi positif dalam kelompok membantu Guru menciptakan kelas yang hidup dan komunikatif.',
+                    konselor: 'Relevan! Keterampilan komunikasi interpersonal dan membangun relasi yang nyaman sangat membantu dalam sesi konseling kelompok maupun individu.'
+                }
+            },
+            {
+                id: 'p5',
+                name: 'Sinta (Siswa Fase E)',
+                avatar: '🌿',
+                color: 'sage',
+                shortTag: 'Cinta Alam & Observasi',
+                minat: 'Eksplorasi alam, kelestarian lingkungan, biologi, dan eksperimen lapangan.',
+                bakat: 'Keingintahuan tinggi terhadap fenomena alam dan ketekunan mengamati detail.',
+                kemampuan: 'Melakukan observasi lapangan, mencatat perubahan ekosistem, dan merawat makhluk hidup.',
+                validCareers: ['peneliti', 'dokter'],
+                alternativeNote: 'Peneliti Lingkungan/Biologi, Dokter/Dokter Hewan, Ahli Konservasi, maupun Agronom.',
+                matchExplanations: {
+                    peneliti: 'Sangat relevan! Minat terhadap alam serta kemampuan melakukan observasi teliti adalah modal berharga bagi Peneliti Lingkungan maupun Biologi.',
+                    dokter: 'Cocok! Ketertarikan pada ilmu hayati (biologi) dan ketelitian mengamati gejala merupakan dasar penting bagi profesi Dokter dalam menjaga kesehatan manusia.'
+                }
+            }
+        ];
+
+        // 8 Pilihan Profesi di Level 2 (Lebih banyak dari profil agar siswa berpikir kritis)
+        const CAREERS_DATA = [
+            { id: 'konselor', title: 'Konselor / Psikolog', icon: '🤝', desc: 'Mendampingi individu memahami diri & mengatasi masalah.' },
+            { id: 'akuntan', title: 'Akuntan', icon: '📊', desc: 'Mengelola, menganalisis, dan memeriksa laporan keuangan.' },
+            { id: 'desainer', title: 'Desainer Grafis', icon: '🖌️', desc: 'Menciptakan karya visual untuk menyampaikan pesan kreatif.' },
+            { id: 'jurnalis', title: 'Jurnalis / Reporter', icon: '📰', desc: 'Meliput peristiwa, wawancara, dan menyajikan berita akurat.' },
+            { id: 'peneliti', title: 'Peneliti Sains & Alam', icon: '🔬', desc: 'Melakukan observasi, riset, dan eksperimen ilmiah.' },
+            { id: 'dokter', title: 'Dokter', icon: '🩺', desc: 'Mendiagnosis, merawat kesehatan, dan berempati pada pasien.' },
+            { id: 'guru', title: 'Guru / Pendidik', icon: '📚', desc: 'Membimbing belajar, berkomunikasi, dan menginspirasi siswa.' },
+            { id: 'analis_data', title: 'Analis Data', icon: '💻', desc: 'Mengolah kumpulan angka dan data untuk menemukan solusi.' }
+        ];
+
+        // 3 Studi Kasus Level 3 (Career Challenge)
+        const LEVEL3_CASES = [
+            {
+                id: 'c1',
+                title: 'Kasus 1: Dilema Ekstrakurikuler Dimas',
+                story: 'Dimas sangat menyukai pelajaran Biologi dan sering menghabiskan waktu mengamati tanaman obat di kebun sekolah. Ia juga dikenal sabar dan peduli saat ada teman yang sakit di UKS. Namun, Dimas ragu apakah potensinya hanya cocok di laboratorium saja.',
+                question: 'Pilihan karier dan alasan manakah yang paling tepat untuk Dimas?',
+                options: [
+                    {
+                        id: 'opt1',
+                        text: 'Dokter atau Peneliti Biologi — karena menggabungkan minat pada ilmu hayati/observasi dengan kepedulian terhadap kesehatan.',
+                        correct: true,
+                        feedback: 'Analisis yang luar biasa! Potensi observasi ilmiah dan kepedulian sosial membuka peluang di bidang medis (Dokter) maupun riset hayati (Peneliti).'
+                    },
+                    {
+                        id: 'opt2',
+                        text: 'Akuntan — karena setiap orang yang teliti pasti harus bekerja menghitung laporan keuangan perusahaan.',
+                        correct: false,
+                        feedback: 'Ketelitian memang penting bagi Akuntan, tetapi minat utama Dimas ada pada makhluk hidup dan kepedulian kesehatan, bukan pada data finansial.'
+                    },
+                    {
+                        id: 'opt3',
+                        text: 'Hanya cocok menjadi penjaga kebun — karena siswa yang suka tanaman tidak membutuhkan pendidikan tinggi.',
+                        correct: false,
+                        feedback: 'Hati-hati terhadap stereotip! Minat pada tanaman dan biologi dapat dikembangkan menjadi peneliti agronomi, ahli bioteknologi, hingga dokter.'
+                    }
+                ]
+            },
+            {
+                id: 'c2',
+                title: 'Kasus 2: Bakat Komunikasi & Visual Alya',
+                story: 'Alya gemar membuat poster kampanye anti-perundungan untuk majalah dinding sekolah. Selain jago memadukan warna dan tipografi, Alya juga luwes mempresentasikan makna posternya di depan teman-teman sekelas.',
+                question: 'Bagaimana hubungan potensi Alya dengan pilihan karier yang relevan?',
+                options: [
+                    {
+                        id: 'opt1',
+                        text: 'Desainer Grafis atau Spesialis Komunikasi Visual — karena kemampuan estetika visualnya didukung kecakapan menyampaikan pesan kepada publik.',
+                        correct: true,
+                        feedback: 'Tepat sekali! Dalam dunia kerja modern, seorang Desainer Grafis atau Kreator Komunikasi sangat terbantu jika mampu mempresentasikan konsep karyanya dengan percaya diri.'
+                    },
+                    {
+                        id: 'opt2',
+                        text: 'Tidak cocok bekerja di bidang desain — karena desainer harus pendiam dan hanya bekerja sendirian di depan komputer.',
+                        correct: false,
+                        feedback: 'Itu adalah stereotip yang kurang tepat! Banyak profesi kreatif justru menuntut kolaborasi tim dan presentasi ide kepada klien.'
+                    },
+                    {
+                        id: 'opt3',
+                        text: 'Analis Statistik — karena membuat poster membutuhkan perhitungan rumus matematika tingkat lanjut.',
+                        correct: false,
+                        feedback: 'Kurang sesuai. Kekuatan utama Alya terletak pada kreativitas visual dan komunikasi publik, bukan pada pengolahan data statistik.'
+                    }
+                ]
+            },
+            {
+                id: 'c3',
+                title: 'Kasus 3: Pilihan Karier Fajar yang Menyukai Angka & Diskusi',
+                story: 'Fajar sangat menyukai matematika dan senang menghitung rincian anggaran kegiatan OSIS. Di sisi lain, ia juga senang berdiskusi dan menjelaskan konsep hitungan yang rumit dengan bahasa sederhana kepada teman-temannya.',
+                question: 'Pilihan karier mana yang paling mencerminkan fleksibilitas potensi Fajar?',
+                options: [
+                    {
+                        id: 'opt1',
+                        text: 'Guru Matematika, Akuntan, atau Konsultan Keuangan — karena kemampuan analisis angka dapat dipadukan dengan keterampilan komunikasi.',
+                        correct: true,
+                        feedback: 'Sempurna! Kamu memahami bahwa satu kombinasi potensi (logika angka + komunikasi) bisa relevan dengan berbagai profesi, baik di bidang pendidikan maupun keuangan.'
+                    },
+                    {
+                        id: 'opt2',
+                        text: 'Jurnalis Olahraga — karena semua anggota OSIS pasti berbakat meliput pertandingan.',
+                        correct: false,
+                        feedback: 'Kurang tepat. Aktif di OSIS melatih organisasi, tetapi potensi spesifik Fajar yang menonjol adalah analisis angka dan menjelaskan konsep logis.'
+                    },
+                    {
+                        id: 'opt3',
+                        text: 'Ilustrator Komik — karena menghitung anggaran sama dengan menggambar karakter cerita.',
+                        correct: false,
+                        feedback: 'Belum sesuai. Ilustrator lebih berfokus pada bakat menggambar dan imajinasi visual, sedangkan kekuatan Fajar adalah logika numerik dan komunikasi.'
+                    }
+                ]
+            }
+        ];
+
+        // --- 2. STATE PERMAINAN ---
+        let gameState = {
+            score: 0,
+            level: 1,
+            l1ViewedIds: new Set(),
+            l2SelectedProfileId: null,
+            l2MatchedPairs: {}, // { profileId: careerId }
+            l3CurrentIndex: 0,
+            l3AttemptsCurrent: 0,
+            soundEnabled: true,
+            modalCallback: null
+        };
+
+        // --- 3. SISTEM AUDIO LEMBUT (TONE.JS) ---
+        let synth = null;
+        function playTone(type) {
+            if (!gameState.soundEnabled) return;
+            try {
+                if (!synth) {
+                    synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                    synth.volume.value = -10;
+                }
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+                const now = Tone.now();
+                if (type === 'click') {
+                    synth.triggerAttackRelease('C5', '32n', now);
+                } else if (type === 'match') {
+                    synth.triggerAttackRelease(['C5', 'E5', 'G5'], '16n', now);
+                } else if (type === 'retry') {
+                    synth.triggerAttackRelease(['E4', 'D4'], '16n', now);
+                } else if (type === 'win') {
+                    synth.triggerAttackRelease(['C5', 'E5', 'G5', 'C6'], '8n', now);
+                }
+            } catch (e) {
+                // Abaikan jika browser memblokir audio
+            }
+        }
+
+        function toggleSound() {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            document.getElementById('sound-icon').textContent = gameState.soundEnabled ? '🔊' : '🔇';
+            showToast(gameState.soundEnabled ? 'Efek suara aktif' : 'Efek suara dimatikan');
+        }
+
+        // --- 4. NAVIGASI HALAMAN & HUD ---
+        function showPage(pageId) {
+            playTone('click');
+            const pages = ['page-intro', 'page-guide', 'page-game', 'page-result', 'page-reflection'];
+            pages.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(pageId).classList.remove('hidden');
+
+            const hud = document.getElementById('hud-bar');
+            if (pageId === 'page-game') {
+                hud.classList.remove('hidden');
+            } else {
+                hud.classList.add('hidden');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateHUD() {
+            document.getElementById('hud-level').textContent = `${gameState.level}/3`;
+            document.getElementById('hud-score').textContent = gameState.score;
+
+            // Update Progress Bar & Stepper
+            const progressFill = document.getElementById('progress-bar-fill');
+            const s1 = document.getElementById('step-label-1');
+            const s2 = document.getElementById('step-label-2');
+            const s3 = document.getElementById('step-label-3');
+
+            [s1, s2, s3].forEach(el => el.className = 'text-slate-400');
+
+            if (gameState.level === 1) {
+                progressFill.style.width = '33%';
+                s1.className = 'text-lavender-600 font-extrabold';
+            } else if (gameState.level === 2) {
+                progressFill.style.width = '66%';
+                s1.className = 'text-sage-600';
+                s2.className = 'text-lavender-600 font-extrabold';
+            } else {
+                progressFill.style.width = '100%';
+                s1.className = 'text-sage-600';
+                s2.className = 'text-sage-600';
+                s3.className = 'text-lavender-600 font-extrabold';
+            }
+        }
+
+        function addScore(points) {
+            gameState.score += points;
+            updateHUD();
+        }
+
+        function goHomeConfirm() {
+            if (document.getElementById('page-game').classList.contains('hidden')) {
+                showPage('page-intro');
+            } else {
+                showToast('Gunakan tombol "Main Lagi" di akhir permainan atau selesaikan level ini ya!');
+            }
+        }
+
+        function startGameDirectly() {
+            resetGameState();
+            showPage('page-game');
+            initLevel1();
+        }
+
+        function resetGameState() {
+            gameState.score = 0;
+            gameState.level = 1;
+            gameState.l1ViewedIds.clear();
+            gameState.l2SelectedProfileId = null;
+            gameState.l2MatchedPairs = {};
+            gameState.l3CurrentIndex = 0;
+            gameState.l3AttemptsCurrent = 0;
+            updateHUD();
+        }
+
+        function resetAndPlayAgain() {
+            resetGameState();
+            document.getElementById('reflection-saved-card').classList.add('hidden');
+            showPage('page-game');
+            initLevel1();
+        }
+
+        // --- 5. LOGIKA LEVEL 1: KENALI POTENSIMU ---
+        function initLevel1() {
+            gameState.level = 1;
+            updateHUD();
+            document.getElementById('level-1-view').classList.remove('hidden');
+            document.getElementById('level-2-view').classList.add('hidden');
+            document.getElementById('level-3-view').classList.add('hidden');
+
+            const container = document.getElementById('l1-cards-container');
+            container.innerHTML = '';
+
+            PROFILES_DATA.forEach(profile => {
+                const isViewed = gameState.l1ViewedIds.has(profile.id);
+                const card = document.createElement('div');
+                card.id = `l1-card-${profile.id}`;
+                card.className = `game-card cursor-pointer rounded-2xl border-2 p-5 transition ${
+                    isViewed ? 'bg-sage-50/70 border-sage-400' : 'bg-cream/80 border-lavender-200 hover:border-lavender-400'
+                }`;
+                card.onclick = () => inspectProfileL1(profile);
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <span class="w-11 h-11 rounded-2xl bg-white border border-lavender-200 flex items-center justify-center text-2xl shadow-sm">${profile.avatar}</span>
+                            <div>
+                                <h3 class="font-display font-extrabold text-base text-slate-800">${profile.name}</h3>
+                                <span class="text-xs font-semibold text-lavender-600">${profile.shortTag}</span>
+                            </div>
+                        </div>
+                        <span id="l1-badge-${profile.id}" class="text-xs font-bold px-2.5 py-1 rounded-full ${isViewed ? 'bg-sage-500 text-white' : 'bg-lavender-100 text-lavender-600'}">
+                            ${isViewed ? '✓ Dipahami' : 'Klik Baca'}
+                        </span>
+                    </div>
+                    <div class="space-y-2 text-xs text-slate-600 bg-white/90 p-3.5 rounded-xl border border-lavender-100">
+                        <p><strong class="text-lavender-700">💖 Minat:</strong> ${profile.minat}</p>
+                        <p><strong class="text-sage-600">✨ Bakat:</strong> ${profile.bakat}</p>
+                        <p><strong class="text-amber-600">🛠️ Kemampuan:</strong> ${profile.kemampuan}</p>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            updateL1Progress();
+        }
+
+        function inspectProfileL1(profile) {
+            if (!gameState.l1ViewedIds.has(profile.id)) {
+                gameState.l1ViewedIds.add(profile.id);
+                addScore(10); // +10 poin setiap mempelajari profil
+                playTone('match');
+
+                const card = document.getElementById(`l1-card-${profile.id}`);
+                const badge = document.getElementById(`l1-badge-${profile.id}`);
+                card.classList.remove('bg-cream/80', 'border-lavender-200');
+                card.classList.add('bg-sage-50/70', 'border-sage-400', 'match-success-anim');
+                badge.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-sage-500 text-white';
+                badge.textContent = '✓ Dipahami';
+
+                updateL1Progress();
+            } else {
+                playTone('click');
+                showToast(`Kamu sudah mempelajari profil ${profile.name} (+10 poin)`);
+            }
+        }
+
+        function updateL1Progress() {
+            const count = gameState.l1ViewedIds.size;
+            document.getElementById('l1-counter').textContent = `${count} / ${PROFILES_DATA.length}`;
+
+            const btn = document.getElementById('btn-to-level-2');
+            const hint = document.getElementById('l1-hint');
+
+            if (count === PROFILES_DATA.length) {
+                btn.disabled = false;
+                btn.className = 'w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-lavender-500 to-lavender-600 hover:from-lavender-600 hover:to-lavender-700 text-white font-display font-extrabold text-sm sm:text-base shadow-lg shadow-lavender-500/25 transition cursor-pointer';
+                hint.textContent = '🎉 Keren! Semua potensi karakter sudah kamu pahami. Ayo lanjut ke Level 2!';
+                hint.className = 'text-xs sm:text-sm text-sage-600 font-bold';
+            }
+        }
+
+        // --- 6. LOGIKA LEVEL 2: CAREER MATCHING (KLIK & DRAG-DROP) ---
+        function initLevel2() {
+            playTone('click');
+            gameState.level = 2;
+            updateHUD();
+            document.getElementById('level-1-view').classList.add('hidden');
+            document.getElementById('level-2-view').classList.remove('hidden');
+            document.getElementById('level-3-view').classList.add('hidden');
+
+            renderLevel2Board();
+        }
+
+        function renderLevel2Board() {
+            const profilesList = document.getElementById('l2-profiles-list');
+            const careersGrid = document.getElementById('l2-careers-grid');
+            profilesList.innerHTML = '';
+            careersGrid.innerHTML = '';
+
+            const matchedCount = Object.keys(gameState.l2MatchedPairs).length;
+            document.getElementById('l2-counter').textContent = `${matchedCount} / ${PROFILES_DATA.length}`;
+
+            // Render Kartu Profil (Kiri)
+            PROFILES_DATA.forEach(profile => {
+                const matchedCareerId = gameState.l2MatchedPairs[profile.id];
+                const isSelected = gameState.l2SelectedProfileId === profile.id;
+                const matchedCareerObj = CAREERS_DATA.find(c => c.id === matchedCareerId);
+
+                const pCard = document.createElement('div');
+                pCard.id = `l2-prof-${profile.id}`;
+                pCard.draggable = !matchedCareerId;
+                pCard.className = `game-card rounded-2xl border-2 p-4 relative ${
+                    matchedCareerId
+                        ? 'matched-card cursor-default'
+                        : isSelected
+                        ? 'selected-card cursor-pointer'
+                        : 'bg-white border-lavender-200 cursor-pointer'
+                }`;
+
+                // Event Klik
+                if (!matchedCareerId) {
+                    pCard.onclick = () => selectProfileL2(profile.id);
+                    // Event Drag Start
+                    pCard.ondragstart = (e) => {
+                        gameState.l2SelectedProfileId = profile.id;
+                        e.dataTransfer.setData('text/plain', profile.id);
+                        pCard.classList.add('opacity-60');
+                    };
+                    pCard.ondragend = () => {
+                        pCard.classList.remove('opacity-60');
+                    };
+                }
+
+                pCard.innerHTML = `
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-2xl">${profile.avatar}</span>
+                            <div>
+                                <h4 class="font-display font-extrabold text-sm text-slate-800">${profile.name}</h4>
+                                <p class="text-xs text-slate-600 line-clamp-2 mt-0.5">${profile.minat}</p>
+                            </div>
+                        </div>
+                        ${
+                            matchedCareerId
+                                ? `<span class="shrink-0 px-2.5 py-1 rounded-xl bg-sage-500 text-white text-[11px] font-bold">✓ ${matchedCareerObj.title}</span>`
+                                : `<span class="shrink-0 px-2 py-0.5 rounded-lg bg-lavender-100 text-lavender-600 text-[11px] font-bold">${isSelected ? 'Terpilih' : 'Pilih'}</span>`
+                        }
+                    </div>
+                    <div class="mt-2.5 pt-2 border-t border-slate-100 flex flex-wrap gap-1.5 text-[11px]">
+                        <span class="px-2 py-0.5 rounded-md bg-lavender-50 text-lavender-700 font-medium">✨ ${profile.shortTag}</span>
+                    </div>
+                `;
+                profilesList.appendChild(pCard);
+            });
+
+            // Render Kartu Profesi (Kanan)
+            CAREERS_DATA.forEach(career => {
+                // Cek apakah profesi ini sudah dipakai oleh salah satu profil
+                const usedByProfileId = Object.keys(gameState.l2MatchedPairs).find(
+                    pId => gameState.l2MatchedPairs[pId] === career.id
+                );
+                const usedByProfile = PROFILES_DATA.find(p => p.id === usedByProfileId);
+
+                const cCard = document.createElement('div');
+                cCard.id = `l2-car-${career.id}`;
+                cCard.className = `game-card rounded-2xl border-2 p-4 flex flex-col justify-between ${
+                    usedByProfile
+                        ? 'matched-card cursor-default'
+                        : 'bg-cream/90 border-sage-200 hover:border-sage-500 cursor-pointer'
+                }`;
+
+                if (!usedByProfile) {
+                    cCard.onclick = () => attemptMatchL2(career.id);
+
+                    // Event Drag Over & Drop
+                    cCard.ondragover = (e) => {
+                        e.preventDefault();
+                        cCard.classList.add('drag-over');
+                    };
+                    cCard.ondragleave = () => {
+                        cCard.classList.remove('drag-over');
+                    };
+                    cCard.ondrop = (e) => {
+                        e.preventDefault();
+                        cCard.classList.remove('drag-over');
+                        const draggedProfileId = e.dataTransfer.getData('text/plain') || gameState.l2SelectedProfileId;
+                        if (draggedProfileId) {
+                            gameState.l2SelectedProfileId = draggedProfileId;
+                            attemptMatchL2(career.id);
+                        }
+                    };
+                }
+
+                cCard.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <span class="w-10 h-10 rounded-xl bg-white border border-sage-200 flex items-center justify-center text-xl shrink-0 shadow-sm">${career.icon}</span>
+                        <div>
+                            <h4 class="font-display font-extrabold text-sm text-slate-800">${career.title}</h4>
+                            <p class="text-xs text-slate-600 mt-1 leading-relaxed">${career.desc}</p>
+                        </div>
+                    </div>
+                    ${
+                        usedByProfile
+                            ? `<div class="mt-3 pt-2 border-t border-sage-200 text-[11px] font-bold text-sage-600">✅ Dipasangkan dengan ${usedByProfile.name.split(' ')[0]}</div>`
+                            : `<div class="mt-3 pt-2 border-t border-sage-100 text-[11px] font-semibold text-sage-600/80 text-right">Klik atau lepas kartu di sini</div>`
+                    }
+                `;
+                careersGrid.appendChild(cCard);
+            });
+
+            // Cek jika semua 5 profil sudah terpasang
+            if (matchedCount === PROFILES_DATA.length) {
+                document.getElementById('l2-complete-bar').classList.remove('hidden');
+            }
+        }
+
+        function selectProfileL2(profileId) {
+            playTone('click');
+            if (gameState.l2SelectedProfileId === profileId) {
+                gameState.l2SelectedProfileId = null;
+            } else {
+                gameState.l2SelectedProfileId = profileId;
+            }
+            renderLevel2Board();
+        }
+
+        function attemptMatchL2(careerId) {
+            const selectedId = gameState.l2SelectedProfileId;
+            if (!selectedId) {
+                playTone('retry');
+                showToast('Pilih atau klik salah satu Kartu Profil di sebelah kiri terlebih dahulu ya!');
+                return;
+            }
+
+            const profile = PROFILES_DATA.find(p => p.id === selectedId);
+            const career = CAREERS_DATA.find(c => c.id === careerId);
+
+            if (profile.validCareers.includes(careerId)) {
+                // KECOCOKAN RELEVAN!
+                playTone('match');
+                gameState.l2MatchedPairs[profile.id] = careerId;
+                gameState.l2SelectedProfileId = null;
+                addScore(30); // +30 poin per pasangan tepat
+
+                renderLevel2Board();
+
+                openFeedbackModal({
+                    isSuccess: true,
+                    tag: 'Pasangan Sangat Relevan! (+30 Poin)',
+                    title: `${profile.name.split(' ')[0]} ↔ ${career.title}`,
+                    body: profile.matchExplanations[careerId],
+                    alternatives: profile.alternativeNote
+                });
+            } else {
+                // KURANG SESUAI -> BERIKAN PETUNJUK EDUKATIF & KESEMPATAN COBA LAGI
+                playTone('retry');
+                const cardEl = document.getElementById(`l2-car-${careerId}`);
+                if (cardEl) cardEl.classList.add('shake-anim');
+
+                openFeedbackModal({
+                    isSuccess: false,
+                    tag: 'Mari Kita Tinjau Kembali 🔍',
+                    title: `Hubungan ${profile.name.split(' ')[0]} & ${career.title}`,
+                    body: `Profesi <strong>${career.title}</strong> berfokus pada: <em>"${career.desc}"</em>.<br><br>Sementara itu, kekuatan utama <strong>${profile.name.split(' ')[0]}</strong> ada pada <strong>${profile.shortTag}</strong> (${profile.minat.toLowerCase()}). Coba cari profesi lain yang lebih selaras dengan minat dan bakat tersebut!`,
+                    alternatives: null
+                });
+            }
+        }
+
+        // --- 7. LOGIKA LEVEL 3: CAREER CHALLENGE (KASUS & ALASAN) ---
+        function initLevel3() {
+            playTone('click');
+            gameState.level = 3;
+            gameState.l3CurrentIndex = 0;
+            gameState.l3AttemptsCurrent = 0;
+            updateHUD();
+
+            document.getElementById('level-1-view').classList.add('hidden');
+            document.getElementById('level-2-view').classList.add('hidden');
+            document.getElementById('level-3-view').classList.remove('hidden');
+
+            renderLevel3Case();
+        }
+
+        function renderLevel3Case() {
+            const idx = gameState.l3CurrentIndex;
+            const currentCase = LEVEL3_CASES[idx];
+            document.getElementById('l3-counter').textContent = `${idx + 1} / ${LEVEL3_CASES.length}`;
+
+            const box = document.getElementById('l3-case-box');
+            box.innerHTML = `
+                <div class="bg-gradient-to-br from-lavender-50 to-cream border border-lavender-200 rounded-2xl p-5 sm:p-6">
+                    <h3 class="font-display font-extrabold text-lg text-lavender-700 mb-2">${currentCase.title}</h3>
+                    <p class="text-sm sm:text-base text-slate-700 leading-relaxed">${currentCase.story}</p>
+                </div>
+
+                <div>
+                    <h4 class="font-display font-extrabold text-sm sm:text-base text-slate-800 mb-3">
+                        🤔 ${currentCase.question}
+                    </h4>
+                    <div class="space-y-3">
+                        ${currentCase.options.map((opt, i) => `
+                            <button onclick="evaluateLevel3Option('${opt.id}')" class="w-full text-left p-4 sm:p-5 rounded-2xl bg-white hover:bg-lavender-50/70 border-2 border-lavender-200 hover:border-lavender-500 transition flex items-start gap-3.5 group">
+                                <span class="w-8 h-8 rounded-xl bg-lavender-100 group-hover:bg-lavender-500 group-hover:text-white text-lavender-700 font-display font-extrabold text-sm flex items-center justify-center shrink-0 transition">
+                                    ${String.fromCharCode(65 + i)}
+                                </span>
+                                <span class="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed pt-1">${opt.text}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function evaluateLevel3Option(optionId) {
+            const currentCase = LEVEL3_CASES[gameState.l3CurrentIndex];
+            const chosen = currentCase.options.find(o => o.id === optionId);
+
+            if (chosen.correct) {
+                playTone('match');
+                // Bonus poin jika langsung tepat pada percobaan pertama!
+                const isFirstTry = gameState.l3AttemptsCurrent === 0;
+                const earned = isFirstTry ? 50 : 30;
+                addScore(earned);
+
+                const isLastCase = gameState.l3CurrentIndex === LEVEL3_CASES.length - 1;
+
+                openFeedbackModal({
+                    isSuccess: true,
+                    tag: isFirstTry ? `Tepat Sekali! (+${earned} Poin Bonus!)` : `Analisis Tepat! (+${earned} Poin)`,
+                    title: 'Penalaran Karier yang Matang!',
+                    body: chosen.feedback,
+                    alternatives: null,
+                    onClose: () => {
+                        if (isLastCase) {
+                            finishGame();
+                        } else {
+                            gameState.l3CurrentIndex++;
+                            gameState.l3AttemptsCurrent = 0;
+                            renderLevel3Case();
+                        }
+                    }
+                });
+            } else {
+                playTone('retry');
+                gameState.l3AttemptsCurrent++;
+                openFeedbackModal({
+                    isSuccess: false,
+                    tag: 'Coba Analisis Lagi 💡',
+                    title: 'Belum Paling Relevan',
+                    body: chosen.feedback + '<br><br>Silakan baca kembali minat dan kemampuan tokoh pada studi kasus, lalu pilih alasan yang paling menghubungkan keduanya!',
+                    alternatives: null
+                });
+            }
+        }
+
+        // --- 8. HALAMAN HASIL & REFLEKSI ---
+        function finishGame() {
+            playTone('win');
+            showPage('page-result');
+            document.getElementById('final-score-display').textContent = gameState.score;
+
+            const titleEl = document.getElementById('result-badge-title');
+            if (gameState.score >= 320) {
+                titleEl.textContent = 'Master Eksplorasi Karier! 🌟';
+            } else if (gameState.score >= 250) {
+                titleEl.textContent = 'Perencana Karier Cerdas! 🚀';
+            } else {
+                titleEl.textContent = 'Penjelajah Potensi Hebat! 🌱';
+            }
+        }
+
+        function saveReflection() {
+            playTone('match');
+            const q1 = document.getElementById('ref-q1').value.trim();
+            const q2 = document.getElementById('ref-q2').value.trim();
+            const q3 = document.getElementById('ref-q3').value.trim();
+
+            if (!q1 && !q2 && !q3) {
+                showToast('Tuliskan minimal satu jawaban refleksimu terlebih dahulu ya!');
+                return;
+            }
+
+            const summary = `✨ REFLEKSI KARIERKU (SMA FASE E)\n` +
+                `• Potensi yang paling kukenali: ${q1 || '-'}\n` +
+                `• Karier yang ingin dieksplorasi: ${q2 || '-'}\n` +
+                `• Langkah kecilku di kelas X: ${q3 || '-'}`;
+
+            document.getElementById('reflection-preview-text').textContent = summary;
+            document.getElementById('reflection-saved-card').classList.remove('hidden');
+            showToast('Refleksi berhasil dirangkum!');
+        }
+
+        function copyReflection() {
+            const text = document.getElementById('reflection-preview-text').textContent;
+            const tempInput = document.createElement('textarea');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast('Teks refleksi berhasil disalin ke clipboard! 📋');
+        }
+
+        // --- 9. KONTROL MODAL UMPAN BALIK & TOAST ---
+        function openFeedbackModal({ isSuccess, tag, title, body, alternatives, onClose }) {
+            const modal = document.getElementById('feedback-modal');
+            const iconBox = document.getElementById('modal-icon-box');
+            const tagEl = document.getElementById('modal-tag');
+            const titleEl = document.getElementById('modal-title');
+            const bodyEl = document.getElementById('modal-body');
+            const altBox = document.getElementById('modal-alternatives');
+            const altText = document.getElementById('modal-alt-text');
+            const closeBtn = document.getElementById('modal-close-btn');
+
+            if (isSuccess) {
+                iconBox.className = 'w-12 h-12 rounded-2xl bg-sage-100 text-2xl flex items-center justify-center shrink-0';
+                iconBox.textContent = '🌟';
+                tagEl.className = 'text-xs font-extrabold uppercase tracking-wider text-sage-600';
+                closeBtn.className = 'w-full sm:w-auto px-7 py-3 rounded-2xl bg-sage-600 hover:bg-sage-700 text-white font-display font-extrabold text-sm transition';
+                closeBtn.textContent = 'Lanjutkan';
+            } else {
+                iconBox.className = 'w-12 h-12 rounded-2xl bg-amber-100 text-2xl flex items-center justify-center shrink-0';
+                iconBox.textContent = '🧭';
+                tagEl.className = 'text-xs font-extrabold uppercase tracking-wider text-amber-600';
+                closeBtn.className = 'w-full sm:w-auto px-7 py-3 rounded-2xl bg-lavender-600 hover:bg-lavender-700 text-white font-display font-extrabold text-sm transition';
+                closeBtn.textContent = 'Coba Kembali';
+            }
+
+            tagEl.textContent = tag;
+            titleEl.textContent = title;
+            bodyEl.innerHTML = body;
+
+            if (alternatives) {
+                altBox.classList.remove('hidden');
+                altText.textContent = alternatives;
+            } else {
+                altBox.classList.add('hidden');
+            }
+
+            gameState.modalCallback = onClose || null;
+            modal.classList.remove('hidden');
+        }
+
+        function closeFeedbackModal() {
+            playTone('click');
+            document.getElementById('feedback-modal').classList.add('hidden');
+            if (typeof gameState.modalCallback === 'function') {
+                const cb = gameState.modalCallback;
+                gameState.modalCallback = null;
+                cb();
+            }
+        }
+
+        let toastTimer = null;
+        function showToast(message) {
+            const toast = document.getElementById('toast-box');
+            document.getElementById('toast-msg').textContent = message;
+            toast.classList.remove('hidden');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
